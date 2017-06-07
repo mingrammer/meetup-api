@@ -5,7 +5,6 @@ import (
 	"log"
 
 	"github.com/ant0ine/go-json-rest/rest"
-	"github.com/gorilla/sessions"
 	"github.com/jinzhu/gorm"
 	"github.com/qkraudghgh/meetup/api/handler"
 	"github.com/qkraudghgh/meetup/api/middleware"
@@ -14,16 +13,14 @@ import (
 )
 
 type MeetupApp struct {
-	Api     *rest.Api
-	DB      *gorm.DB
-	Session *sessions.CookieStore
-	Config  *config.Config
+	Api    *rest.Api
+	DB     *gorm.DB
+	Config *config.Config
 }
 
 func Initialize(config *config.Config) *rest.Api {
 	meetupApp := &MeetupApp{}
 	meetupApp.Config = config
-	meetupApp.Session = sessions.NewCookieStore([]byte(config.Secret))
 	meetupApp.InitDB()
 	meetupApp.InitSchema()
 	meetupApp.SetInitialData()
@@ -74,7 +71,6 @@ func (ma *MeetupApp) InitDB() {
 		ma.Config.DB.Password,
 		ma.Config.DB.Name,
 		ma.Config.DB.Charset)
-
 	db, err := gorm.Open(ma.Config.DB.Dialect, dbURI)
 	if err != nil {
 		log.Fatal("Could not connect database")
