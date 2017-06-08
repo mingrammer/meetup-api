@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 
 	"github.com/ant0ine/go-json-rest/rest"
@@ -17,43 +16,42 @@ import (
 func Authorize(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
 	config := config.GetConfig()
 
-	if r.Method == "POST" {
-		accessToken := r.PostForm.Get("access_token")
-		user := GetUserOr404(db, accessToken)
-		if user == nil {
-			http.Redirect(w.(http.ResponseWriter), nil, config.SlackApp.RedirectURL, 302)
-			return
-		}
-		http.Redirect(w.(http.ResponseWriter), nil, "/", 302)
+	code := r.URL.Query().Get("code")
+	redirectURI := r.URL.Query().Get("redirect_uri")
+	if code == "" {
+		w.WriteJson("Need a valid code")
 		return
 	}
-
-	slackOauthCode := r.URL.Query().Get("code")
-	slackTokenRequestURL := fmt.Sprintf(
-		"%s?client_id=%s&client_secret=%s&redirect_uri=%s&code=%s",
-		oauth.SlackTokenURL,
-		config.SlackApp.ClientId,
+	slackTokenURL := fmt.Sprintf(
+		"%s?client_id=%s&client_secret=%s&code=%s&redirect_uri=%s",
+		config.SlackApp.TokenURL,
+		config.SlackApp.ClientID,
 		config.SlackApp.ClientSecret,
-		config.SlackApp.RedirectURL,
-		slackOauthCode)
-
-	resp, err := http.Get(slackTokenRequestURL)
+		code,
+		redirectURI,
+	)
+	resp, err := http.Get(slackTokenURL)
 	if err != nil {
-		log.Print(err.Error())
+		rest.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Print(err.Error())
+		rest.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
-
 	slackOauthResp := oauth.SimpleSlackOauthResponse{}
 	json.Unmarshal(body, &slackOauthResp)
-
-	user := model.User{
-		Token: slackOauthResp.AccessToken,
+	if slackOauthResp.AccessToken == "" {
+		rest.Error(w, "There are invalid info for getting a token", http.StatusNonAuthoritativeInfo)
+		return
 	}
-	db.Save(&user)
-
+	user := GetUserOr404(db, slackOauthResp.AccessToken)
+	if user == nil {
+		db.Save(&model.User{
+			Token: slackOauthResp.AccessToken,
+		})
+	}
 	w.WriteJson(slackOauthResp)
 }
 

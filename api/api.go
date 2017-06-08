@@ -46,7 +46,6 @@ func Initialize(config *config.Config) *rest.Api {
 	})
 	router, err := rest.MakeRouter(
 		rest.Get("/auth", meetupApp.Authorize),
-		rest.Post("/auth", meetupApp.Authorize),
 		rest.Get("/events", meetupApp.GetAllEvents),
 		rest.Post("/events", meetupApp.CreateEvent),
 		rest.Get("/events/:eid", meetupApp.GetEvent),
