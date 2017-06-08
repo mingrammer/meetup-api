@@ -1,6 +1,8 @@
 package config
 
-import "fmt"
+import (
+	"os"
+)
 
 type Config struct {
 	Secret   string
@@ -19,9 +21,9 @@ type DBConfig struct {
 }
 
 type SlackAppConfig struct {
-	ClientId     string
+	ClientID     string
 	ClientSecret string
-	RedirectURL  string
+	TokenURL     string
 }
 
 func GetConfig() *Config {
@@ -29,20 +31,20 @@ func GetConfig() *Config {
 	DefaultPort := 8080
 
 	return &Config{
-		Secret: "...",
+		Secret: os.Getenv("API_SECRET_VALUE"),
 		Host:   DefaultHost,
 		Port:   DefaultPort,
 		DB: &DBConfig{
 			Dialect:  "mysql",
-			Username: "...",
-			Password: "...",
+			Username: os.Getenv("DB_USERNAME"),
+			Password: os.Getenv("DB_PASSWORD"),
 			Name:     "meetup",
 			Charset:  "utf8",
 		},
 		SlackApp: &SlackAppConfig{
-			ClientId:     "...",
-			ClientSecret: "...",
-			RedirectURL:  fmt.Sprintf("http://%s:%d/auth", DefaultHost, DefaultPort),
+			ClientID:     os.Getenv("SLACK_CLIENT_ID"),
+			ClientSecret: os.Getenv("SLACK_CLIENT_SECRET"),
+			TokenURL:     "https://slack.com/api/oauth.access",
 		},
 	}
 }
