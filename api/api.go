@@ -44,6 +44,26 @@ func Initialize(config *config.Config) *rest.Api {
 		},
 		IfTrue: tokenMiddleware,
 	})
+	meetupApp.Api.Use(&rest.CorsMiddleware{
+		RejectNonCorsRequests: false,
+		OriginValidator: func(origin string, request *rest.Request) bool {
+			return true
+		},
+		AllowedMethods: []string{
+			"GET", "POST", "PUT", "DELETE", "OPTIONS",
+		},
+		AllowedHeaders: []string{
+			"Origin",
+			"Accept",
+			"X-Requested-With",
+			"Content-Type",
+			"Access-Control-Request-Method",
+			"Access-Control-Request-Headers",
+			"Authorization",
+		},
+		AccessControlAllowCredentials: true,
+		AccessControlMaxAge:           3600,
+	})
 	router, err := rest.MakeRouter(
 		rest.Get("/auth", meetupApp.Authorize),
 		rest.Get("/events", meetupApp.GetAllEvents),
