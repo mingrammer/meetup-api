@@ -3,21 +3,23 @@ package model
 import (
 	"time"
 
-	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 )
 
 type User struct {
-	Token         string `gorm:"primary_key" json:"token"`
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
-	DeletedAt     *time.Time `sql:"index"`
+	UserID         string `gorm:"primary_key" json:"user_id"`
+	Token         string `gorm:"unique" json:"token"`
+	Name          string `gorm:"unique" json:"name"`
+	AvatarURL        string `gorm:"avatar" json:"avatar_url"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
+	DeletedAt     *time.Time `sql:"index" json:"deleted_at`
 	CreatedEvents []Event `gorm:"ForeignKey:OwnerID" json:"created_events"`
 	JoinedEvents  []Event `gorm:"many2many:user_joined_events"`
 }
 
 type Category struct {
-	ID     uint `gorm:"primary_key"`
+	ID     uint `gorm:"primary_key" json:"id"`
 	Title  string `gorm:"not null;unique" json:"title"`
 	Events []Event `gorm:"ForeignKey:CategoryID" json:"related_events"`
 }
@@ -34,7 +36,10 @@ type Datetime struct {
 }
 
 type Event struct {
-	gorm.Model
+	ID          uint `gorm:"primary_key" json:"id"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+	DeletedAt   *time.Time `sql:"index" json:"deleted_at`
 	Place
 	Datetime
 	Title       string `gorm:"not null" json:"event_title"`
@@ -45,7 +50,7 @@ type Event struct {
 }
 
 type Comment struct {
-	gorm.Model
+	ID          uint `gorm:"primary_key" json:"id"`
 	Content     string `json:"content"`
 	WriterToken string `json:"-"`
 	EventID     uint `json:"event_id"`

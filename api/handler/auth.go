@@ -11,6 +11,7 @@ import (
 	"github.com/mingrammer/meetup-api/api/model"
 	"github.com/mingrammer/meetup-api/api/oauth"
 	"github.com/mingrammer/meetup-api/config"
+	"github.com/nlopes/slack"
 )
 
 func Authorize(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
@@ -42,17 +43,33 @@ func Authorize(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
 	}
 	slackOauthResp := oauth.SimpleSlackOauthResponse{}
 	json.Unmarshal(body, &slackOauthResp)
-	if slackOauthResp.AccessToken == "" {
+	token := slackOauthResp.AccessToken
+	if token == "" {
 		rest.Error(w, "There are invalid info for getting a token", http.StatusNonAuthoritativeInfo)
 		return
 	}
-	user := GetUserOr404(db, slackOauthResp.AccessToken)
+	user := GetUserOr404(db, token)
 	if user == nil {
-		db.Save(&model.User{
-			Token: slackOauthResp.AccessToken,
-		})
+		userID, username, avatarURL := GetSlackUserProfileInfo(token)
+		user = &model.User{
+			UserID:    userID,
+			Token:     token,
+			Name:      username,
+			AvatarURL: avatarURL,
+		}
+		db.Save(user)
 	}
-	w.WriteJson(slackOauthResp)
+	w.WriteJson(user)
+}
+
+func GetSlackUserProfileInfo(token string) (string, string, string) {
+	api := slack.New(token)
+	userIdentity, _ := api.GetUserIdentity()
+	userID := userIdentity.User.ID
+	user, _ := api.GetUserInfo(userID)
+	username := user.Name
+	avatarURL := user.Profile.Image72
+	return userID, username, avatarURL
 }
 
 // GetUserOr404 gets a user instance if exists, or nil otherwise
