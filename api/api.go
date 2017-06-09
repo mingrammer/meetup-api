@@ -38,12 +38,6 @@ func Initialize(config *config.Config) *rest.Api {
 
 	meetupApp.Api = rest.NewApi()
 	meetupApp.Api.Use(rest.DefaultDevStack...)
-	meetupApp.Api.Use(&rest.IfMiddleware{
-		Condition: func(request *rest.Request) bool {
-			return request.URL.Path != "/auth"
-		},
-		IfTrue: tokenMiddleware,
-	})
 	meetupApp.Api.Use(&rest.CorsMiddleware{
 		RejectNonCorsRequests: false,
 		OriginValidator: func(origin string, request *rest.Request) bool {
@@ -63,6 +57,12 @@ func Initialize(config *config.Config) *rest.Api {
 		},
 		AccessControlAllowCredentials: true,
 		AccessControlMaxAge:           3600,
+	})
+	meetupApp.Api.Use(&rest.IfMiddleware{
+		Condition: func(request *rest.Request) bool {
+			return request.URL.Path != "/auth"
+		},
+		IfTrue: tokenMiddleware,
 	})
 	router, err := rest.MakeRouter(
 		rest.Get("/auth", meetupApp.Authorize),
