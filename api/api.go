@@ -6,10 +6,10 @@ import (
 
 	"github.com/ant0ine/go-json-rest/rest"
 	"github.com/jinzhu/gorm"
-	"github.com/qkraudghgh/meetup/api/handler"
-	"github.com/qkraudghgh/meetup/api/middleware"
-	"github.com/qkraudghgh/meetup/api/model"
-	"github.com/qkraudghgh/meetup/config"
+	"github.com/mingrammer/meetup-api/api/handler"
+	"github.com/mingrammer/meetup-api/api/middleware"
+	"github.com/mingrammer/meetup-api/api/model"
+	"github.com/mingrammer/meetup-api/config"
 )
 
 type MeetupApp struct {

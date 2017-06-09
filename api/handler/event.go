@@ -5,7 +5,7 @@ import (
 
 	"github.com/ant0ine/go-json-rest/rest"
 	"github.com/jinzhu/gorm"
-	"github.com/qkraudghgh/meetup/api/model"
+	"github.com/mingrammer/meetup-api/api/model"
 )
 
 func GetAllEvents(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {

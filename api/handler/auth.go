@@ -8,9 +8,9 @@ import (
 
 	"github.com/ant0ine/go-json-rest/rest"
 	"github.com/jinzhu/gorm"
-	"github.com/qkraudghgh/meetup/api/model"
-	"github.com/qkraudghgh/meetup/api/oauth"
-	"github.com/qkraudghgh/meetup/config"
+	"github.com/mingrammer/meetup-api/api/model"
+	"github.com/mingrammer/meetup-api/api/oauth"
+	"github.com/mingrammer/meetup-api/config"
 )
 
 func Authorize(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {

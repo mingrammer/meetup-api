@@ -5,8 +5,8 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/qkraudghgh/meetup/api"
-	"github.com/qkraudghgh/meetup/config"
+	"github.com/mingrammer/meetup-api/api"
+	"github.com/mingrammer/meetup-api/config"
 )
 
 func main() {
