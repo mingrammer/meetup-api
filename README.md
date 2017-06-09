@@ -2,7 +2,7 @@
 
 ## What is this?
 
-This is simple meetup web service(api, frontend) + Slack bot hooking
+This is an API server for meetup service
 
 ## Maintainers
 
