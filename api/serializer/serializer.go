@@ -7,6 +7,17 @@ import (
 	"github.com/mingrammer/meetup-api/api/model"
 )
 
+type CategorySerialzer struct {
+	ID    uint `json:"id"`
+	Title string `json:"title"`
+}
+
+type OwnerSerializer struct {
+	ID        uint `json:"id"`
+	Name      string `json:"name"`
+	AvatarURL string `json:"avatar"`
+}
+
 type PlaceSerializer struct {
 	PlaceTitle     string `json:"title"`
 	PlaceLatitude  float64 `json:"lat"`
@@ -19,21 +30,21 @@ type DatetimeSerializer struct {
 }
 
 type EventSerialzer struct {
-	Title         string `json:"title"`
-	Description   string `json:"description"`
-	Place         PlaceSerializer `json:"place"`
-	Datetime      DatetimeSerializer `json:"datetime"`
-	CategoryTitle string `json:"category_title"`
-	OwnerName     string `json:"owner_name"`
-	CreatedAt     *time.Time `json:"created_at"`
-	UpdatedAt     *time.Time `json:"updated_at"`
-	Participants  []model.User `json:"participants"`
-	Comments      []model.Comment `json:"comments"`
+	Title        string `json:"title"`
+	Description  string `json:"description"`
+	Place        PlaceSerializer `json:"place"`
+	Datetime     DatetimeSerializer `json:"datetime"`
+	Category     CategorySerialzer `json:"category"`
+	Owner        OwnerSerializer `json:"owner"`
+	CreatedAt    *time.Time `json:"created_at"`
+	UpdatedAt    *time.Time `json:"updated_at"`
+	Participants []model.User `json:"participants"`
+	Comments     []model.Comment `json:"comments"`
 }
 
 func SerializeEvent(db *gorm.DB, event *model.Event) *EventSerialzer {
 	owner := model.User{}
-	db.Where(&model.User{ID: event.OwnerID}).Find(&owner)
+	db.Find(&owner, event.OwnerID)
 	category := model.Category{}
 	db.Find(&category, event.CategoryID)
 	eventSerialzer := EventSerialzer{
@@ -49,12 +60,19 @@ func SerializeEvent(db *gorm.DB, event *model.Event) *EventSerialzer {
 			DateEnd:   event.Datetime.DateEnd,
 
 		},
-		OwnerName:     owner.Name,
-		CategoryTitle: category.Title,
-		CreatedAt:     event.CreatedAt,
-		UpdatedAt:     event.UpdatedAt,
-		Participants:  event.Participants,
-		Comments:      event.Comments,
+		Category: CategorySerialzer{
+			ID:    category.ID,
+			Title: category.Title,
+		},
+		Owner: OwnerSerializer{
+			ID:        owner.ID,
+			Name:      owner.Name,
+			AvatarURL: owner.AvatarURL,
+		},
+		CreatedAt:    event.CreatedAt,
+		UpdatedAt:    event.UpdatedAt,
+		Participants: event.Participants,
+		Comments:     event.Comments,
 	}
 	return &eventSerialzer
 }
