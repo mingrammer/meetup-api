@@ -16,7 +16,7 @@ func GetAllComments(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
 		return
 	}
 	comments := []model.Comment{}
-	db.Find(&comments)
+	db.Model(&event).Related(&comments)
 	w.WriteJson(&comments)
 }
 
@@ -28,9 +28,14 @@ func CreateComment(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
 		rest.NotFound(w, r)
 		return
 	}
-	event.OwnerToken = userToken.(string)
 	comment := model.Comment{}
+	comment.WriterToken = userToken.(string)
+	comment.EventID = event.ID
 	if err := r.DecodeJsonPayload(&comment); err != nil {
+		rest.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if err := db.Save(&comment).Error; err != nil {
 		rest.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -67,6 +72,10 @@ func UpdateComment(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
 		return
 	}
 	if err := r.DecodeJsonPayload(&comment); err != nil {
+		rest.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if err := db.Save(&comment).Error; err != nil {
 		rest.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
