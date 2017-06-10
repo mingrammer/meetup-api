@@ -7,14 +7,13 @@ import (
 )
 
 type User struct {
-	UserID         string `gorm:"primary_key" json:"user_id"`
+	UserID        string `gorm:"primary_key" json:"user_id"`
 	Token         string `gorm:"unique" json:"token"`
 	Name          string `gorm:"unique" json:"name"`
-	AvatarURL        string `gorm:"avatar" json:"avatar_url"`
-	CreatedAt     time.Time `json:"created_at"`
-	UpdatedAt     time.Time `json:"updated_at"`
-	DeletedAt     *time.Time `sql:"index" json:"deleted_at`
-	CreatedEvents []Event `gorm:"ForeignKey:OwnerID" json:"created_events"`
+	AvatarURL     string `gorm:"avatar" json:"avatar_url"`
+	CreatedAt     *time.Time `json:"created_at"`
+	UpdatedAt     *time.Time `json:"updated_at"`
+	CreatedEvents []Event `gorm:"ForeignKey:OwnerToken" json:"created_events"`
 	JoinedEvents  []Event `gorm:"many2many:user_joined_events"`
 }
 
@@ -36,22 +35,24 @@ type Datetime struct {
 }
 
 type Event struct {
-	ID          uint `gorm:"primary_key" json:"id"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
-	DeletedAt   *time.Time `sql:"index" json:"deleted_at`
+	ID           uint `gorm:"primary_key" json:"id"`
+	Title        string `gorm:"not null" json:"title"`
+	Description  string `json:"description"`
 	Place
 	Datetime
-	Title       string `gorm:"not null" json:"event_title"`
-	Description string `json:"description"`
-	OwnerToken  string `json:"-"`
-	CategoryID  uint `json:"category_id"`
-	Comments    []Comment `gorm:"ForeignKey:EventID" json:"comments"`
+	CategoryID   uint `json:"category_id"`
+	OwnerToken   string `json:"-"`
+	CreatedAt    *time.Time `json:"created_at"`
+	UpdatedAt    *time.Time `json:"updated_at"`
+	Participants []User `gorm:"many2many:user_joined_events json:"participants"`
+	Comments     []Comment `gorm:"ForeignKey:EventID" json:"comments"`
 }
 
 type Comment struct {
 	ID          uint `gorm:"primary_key" json:"id"`
 	Content     string `json:"content"`
-	WriterToken string `json:"-"`
 	EventID     uint `json:"event_id"`
+	WriterToken string `json:"-"`
+	CreatedAt   *time.Time `json:"created_at"`
+	UpdatedAt   *time.Time `json:"updated_at"`
 }
