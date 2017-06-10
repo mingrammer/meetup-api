@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/ant0ine/go-json-rest/rest"
 	"github.com/jinzhu/gorm"
@@ -35,8 +36,13 @@ func CreateEvent(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
 		rest.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	category := GetCategoryOr404(db, strconv.FormatUint(uint64(event.CategoryID), 10))
+	if category != nil {
+		event.CategoryTitle = category.Title
+	}
 	user := GetUserOr404(db, tokenString)
 	event.OwnerID = user.ID
+	event.OwnerName = user.Name
 	if err := db.Save(&event).Error; err != nil {
 		rest.Error(w, err.Error(), http.StatusInternalServerError)
 		return

@@ -36,24 +36,27 @@ type Datetime struct {
 }
 
 type Event struct {
-	ID           uint `gorm:"primary_key" json:"id,omitempty"`
-	Title        string `gorm:"not null" json:"title,omitempty"`
-	Description  string `json:"description,omitempty"`
+	ID            uint `gorm:"primary_key" json:"id,omitempty"`
+	Title         string `gorm:"not null" json:"title,omitempty"`
+	Description   string `json:"description,omitempty"`
 	Place `json:"place,omitempty"`
 	Datetime `json:"datetime,omitempty"`
-	CategoryID   uint `json:"category_id,omitempty"`
-	OwnerID      uint `json:"owner_id,omitempty"`
-	CreatedAt    *time.Time `json:"created_at,omitempty"`
-	UpdatedAt    *time.Time `json:"updated_at,omitempty"`
-	Participants []User `gorm:"many2many:user_joined_events" json:"participants,omitempty"`
-	Comments     []Comment `gorm:"ForeignKey:EventID" json:"comments,omitempty"`
+	CategoryID    uint `json:"category_id,omitempty"`
+	CategoryTitle string `json:"category_title,omitempty"`
+	OwnerID       uint `json:"owner_id,omitempty"`
+	OwnerName     string `json:"owner_name,omitempty"`
+	CreatedAt     *time.Time `json:"created_at,omitempty"`
+	UpdatedAt     *time.Time `json:"updated_at,omitempty"`
+	Participants  []User `gorm:"many2many:user_joined_events" json:"participants,omitempty"`
+	Comments      []Comment `gorm:"ForeignKey:EventID" json:"comments,omitempty"`
 }
 
 type Comment struct {
-	ID        uint `gorm:"primary_key" json:"id,omitempty"`
-	Content   string `json:"content,omitempty"`
-	EventID   uint `json:"event_id,omitempty"`
-	WriterID  uint `json:"writer_id,omitempty"`
-	CreatedAt *time.Time `json:"created_at,omitempty"`
-	UpdatedAt *time.Time `json:"updated_at,omitempty"`
+	ID         uint `gorm:"primary_key" json:"id,omitempty"`
+	Content    string `json:"content,omitempty"`
+	EventID    uint `json:"event_id,omitempty"`
+	WriterID   uint `json:"writer_id,omitempty"`
+	WriterName string `json:"writer_name,omitempty"`
+	CreatedAt  *time.Time `json:"created_at,omitempty"`
+	UpdatedAt  *time.Time `json:"updated_at,omitempty"`
 }

@@ -35,8 +35,9 @@ func CreateComment(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
 		return
 	}
 	user := GetUserOr404(db, tokenString)
-	comment.WriterID = user.ID
 	comment.EventID = event.ID
+	comment.WriterID = user.ID
+	comment.WriterName = user.Name
 	if err := db.Save(&comment).Error; err != nil {
 		rest.Error(w, err.Error(), http.StatusInternalServerError)
 		return
