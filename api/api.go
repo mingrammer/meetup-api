@@ -76,7 +76,7 @@ func Initialize(config *config.Config) *rest.Api {
 		rest.Get("/events/:eid/comments/:cid", meetupApp.GetComment),
 		rest.Put("/events/:eid/comments/:cid", meetupApp.UpdateComment),
 		rest.Delete("/events/:eid/comments/:cid", meetupApp.DeleteComment),
-		rest.Get("/category", meetupApp.GetCategories),
+		rest.Get("/categories", meetupApp.GetAllCategories),
 	)
 	if err != nil {
 		log.Fatal(err)
@@ -168,6 +168,6 @@ func (ma *MeetupApp) DeleteComment(w rest.ResponseWriter, r *rest.Request) {
 	handler.DeleteComment(ma.DB, w, r)
 }
 
-func (ma *MeetupApp) GetCategories(w rest.ResponseWriter, r *rest.Request) {
-	handler.GetCategories(ma.DB, w, r)
+func (ma *MeetupApp) GetAllCategories(w rest.ResponseWriter, r *rest.Request) {
+	handler.GetAllCategories(ma.DB, w, r)
 }

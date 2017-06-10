@@ -6,7 +6,7 @@ import (
 	"github.com/mingrammer/meetup-api/api/model"
 )
 
-func GetCategories(db *gorm.DB, w rest.ResponseWriter, _ *rest.Request) {
+func GetAllCategories(db *gorm.DB, w rest.ResponseWriter, _ *rest.Request) {
 	categories := []model.Category{}
 	db.Find(&categories)
 	w.WriteJson(&categories)
