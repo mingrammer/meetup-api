@@ -14,14 +14,14 @@ type User struct {
 	AvatarURL     string `gorm:"avatar" json:"avatar_url,omitempty"`
 	CreatedAt     *time.Time `json:"created_at,omitempty"`
 	UpdatedAt     *time.Time `json:"updated_at,omitempty"`
-	CreatedEvents []Event `gorm:"ForeignKey:OwnerID" json:"created_events,omitempty"`
-	JoinedEvents  []Event `gorm:"many2many:user_joined_events" json:",omitempty"`
+	CreatedEvents []Event `gorm:"ForeignKey:OwnerID" json:"-"`
+	JoinedEvents  []Event `gorm:"many2many:user_joined_events" json:"-"`
 }
 
 type Category struct {
 	ID     uint `gorm:"primary_key" json:"id,omitempty"`
 	Title  string `gorm:"not null;unique" json:"title,omitempty"`
-	Events []Event `gorm:"ForeignKey:CategoryID" json:"related_events"`
+	Events []Event `gorm:"ForeignKey:CategoryID" json:"-"`
 }
 
 type Place struct {
@@ -47,8 +47,8 @@ type Event struct {
 	OwnerName     string `json:"owner_name,omitempty"`
 	CreatedAt     *time.Time `json:"created_at,omitempty"`
 	UpdatedAt     *time.Time `json:"updated_at,omitempty"`
-	Participants  []User `gorm:"many2many:user_joined_events" json:"participants,omitempty"`
-	Comments      []Comment `gorm:"ForeignKey:EventID" json:"comments,omitempty"`
+	Participants  []User `gorm:"many2many:user_joined_events" json:"-"`
+	Comments      []Comment `gorm:"ForeignKey:EventID" json:"-"`
 }
 
 type Comment struct {

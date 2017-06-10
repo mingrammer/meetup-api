@@ -38,8 +38,6 @@ type EventSerialzer struct {
 	Owner        OwnerSerializer `json:"owner"`
 	CreatedAt    *time.Time `json:"created_at"`
 	UpdatedAt    *time.Time `json:"updated_at"`
-	Participants []model.User `json:"participants"`
-	Comments     []model.Comment `json:"comments"`
 }
 
 func SerializeEvent(db *gorm.DB, event *model.Event) *EventSerialzer {
@@ -71,8 +69,6 @@ func SerializeEvent(db *gorm.DB, event *model.Event) *EventSerialzer {
 		},
 		CreatedAt:    event.CreatedAt,
 		UpdatedAt:    event.UpdatedAt,
-		Participants: event.Participants,
-		Comments:     event.Comments,
 	}
 	return &eventSerialzer
 }
