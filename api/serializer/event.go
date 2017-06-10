@@ -30,6 +30,7 @@ type DatetimeSerializer struct {
 }
 
 type EventSerialzer struct {
+	ID          uint `json:"id"`
 	Title       string `json:"title"`
 	Description string `json:"description"`
 	Place       PlaceSerializer `json:"place"`
@@ -46,6 +47,7 @@ func SerializeEvent(db *gorm.DB, event *model.Event) *EventSerialzer {
 	category := model.Category{}
 	db.Find(&category, event.CategoryID)
 	eventSerialzer := EventSerialzer{
+		ID:          event.ID,
 		Title:       event.Title,
 		Description: event.Description,
 		Place: PlaceSerializer{
