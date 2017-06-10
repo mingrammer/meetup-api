@@ -6,6 +6,7 @@ import (
 	"github.com/ant0ine/go-json-rest/rest"
 	"github.com/jinzhu/gorm"
 	"github.com/mingrammer/meetup-api/api/model"
+	"github.com/mingrammer/meetup-api/api/serializer"
 )
 
 func GetAllEvents(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
@@ -47,7 +48,8 @@ func GetEvent(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
 		rest.NotFound(w, r)
 		return
 	}
-	w.WriteJson(&event)
+	serializedEvent := serializer.SerializeEvent(db, event)
+	w.WriteJson(&serializedEvent)
 }
 
 func UpdateEvent(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
