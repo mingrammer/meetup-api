@@ -6,6 +6,7 @@ import (
 	"github.com/ant0ine/go-json-rest/rest"
 	"github.com/jinzhu/gorm"
 	"github.com/mingrammer/meetup-api/api/model"
+	"github.com/mingrammer/meetup-api/api/serializer"
 )
 
 func GetAllComments(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
@@ -17,7 +18,11 @@ func GetAllComments(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
 	}
 	comments := []model.Comment{}
 	db.Model(&event).Related(&comments)
-	w.WriteJson(&comments)
+	serializedComments := []serializer.CommentSerialzer{}
+	for _, comment := range comments {
+		serializedComments = append(serializedComments, *serializer.SerializeComment(db, &comment))
+	}
+	w.WriteJson(&serializedComments)
 }
 
 func CreateComment(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
@@ -58,7 +63,8 @@ func GetComment(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
 		rest.NotFound(w, r)
 		return
 	}
-	w.WriteJson(&comment)
+	serializedComment := serializer.SerializeComment(db, comment)
+	w.WriteJson(&serializedComment)
 }
 
 func UpdateComment(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
