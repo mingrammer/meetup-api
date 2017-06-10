@@ -52,12 +52,12 @@ func Authorize(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
 	if user == nil {
 		userID, username, avatarURL := GetSlackUserProfileInfo(token)
 		user = &model.User{
-			UserID:    userID,
-			Token:     token,
-			Name:      username,
-			AvatarURL: avatarURL,
+			Token:       token,
+			SlackUserID: userID,
+			Name:        username,
+			AvatarURL:   avatarURL,
 		}
-		db.Save(user)
+		db.Create(user)
 	}
 	w.WriteJson(user)
 }

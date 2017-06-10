@@ -33,7 +33,7 @@ type EventSerialzer struct {
 
 func SerializeEvent(db *gorm.DB, event *model.Event) *EventSerialzer {
 	owner := model.User{}
-	db.Where(&model.User{Token: event.OwnerToken}).Find(&owner)
+	db.Where(&model.User{ID: event.OwnerID}).Find(&owner)
 	category := model.Category{}
 	db.Find(&category, event.CategoryID)
 	eventSerialzer := EventSerialzer{

@@ -102,10 +102,10 @@ func (ma *MeetupApp) InitSchema() {
 	ma.DB.AutoMigrate(&model.User{})
 	ma.DB.AutoMigrate(&model.Category{})
 	ma.DB.AutoMigrate(&model.Event{})
-	ma.DB.Model(&model.Event{}).AddForeignKey("owner_token", "users(token)", "CASCADE", "CASCADE")
+	ma.DB.Model(&model.Event{}).AddForeignKey("owner_id", "users(id)", "CASCADE", "CASCADE")
 	ma.DB.Model(&model.Event{}).AddForeignKey("category_id", "categories(id)", "CASCADE", "CASCADE")
 	ma.DB.AutoMigrate(&model.Comment{})
-	ma.DB.Model(&model.Comment{}).AddForeignKey("writer_token", "users(token)", "CASCADE", "CASCADE")
+	ma.DB.Model(&model.Comment{}).AddForeignKey("writer_id", "users(id)", "CASCADE", "CASCADE")
 	ma.DB.Model(&model.Comment{}).AddForeignKey("event_id", "events(id)", "CASCADE", "CASCADE")
 }
 

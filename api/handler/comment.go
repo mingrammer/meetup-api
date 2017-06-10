@@ -22,6 +22,7 @@ func GetAllComments(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
 
 func CreateComment(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
 	userToken := r.Env["REMOTE_USER"]
+	tokenString := userToken.(string)
 	eventId := r.PathParam("eid")
 	event := GetEventOr404(db, eventId)
 	if event == nil {
@@ -29,12 +30,13 @@ func CreateComment(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
 		return
 	}
 	comment := model.Comment{}
-	comment.WriterToken = userToken.(string)
-	comment.EventID = event.ID
 	if err := r.DecodeJsonPayload(&comment); err != nil {
 		rest.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	user := GetUserOr404(db, tokenString)
+	comment.WriterID = user.ID
+	comment.EventID = event.ID
 	if err := db.Save(&comment).Error; err != nil {
 		rest.Error(w, err.Error(), http.StatusInternalServerError)
 		return

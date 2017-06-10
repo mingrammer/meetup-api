@@ -29,12 +29,14 @@ func GetAllEvents(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
 
 func CreateEvent(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
 	userToken := r.Env["REMOTE_USER"]
+	tokenString := userToken.(string)
 	event := model.Event{}
 	if err := r.DecodeJsonPayload(&event); err != nil {
 		rest.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	event.OwnerToken = userToken.(string)
+	user := GetUserOr404(db, tokenString)
+	event.OwnerID = user.ID
 	if err := db.Save(&event).Error; err != nil {
 		rest.Error(w, err.Error(), http.StatusInternalServerError)
 		return
