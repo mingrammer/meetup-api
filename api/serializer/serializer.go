@@ -41,12 +41,12 @@ func SerializeEvent(db *gorm.DB, event *model.Event) *EventSerialzer {
 		Description: event.Description,
 		Place: PlaceSerializer{
 			PlaceTitle:     event.Place.PlaceTitle,
-			PlaceLatitude:  event.PlaceLatitude,
-			PlaceLongitude: event.PlaceLongitude,
+			PlaceLatitude:  event.Place.PlaceLat,
+			PlaceLongitude: event.Place.PlaceLon,
 		},
 		Datetime: DatetimeSerializer{
-			DateStart: event.DateStart,
-			DateEnd:   event.DateEnd,
+			DateStart: event.Datetime.DateStart,
+			DateEnd:   event.Datetime.DateEnd,
 
 		},
 		OwnerName:     owner.Name,

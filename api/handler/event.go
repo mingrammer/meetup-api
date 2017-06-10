@@ -13,15 +13,16 @@ func GetAllEvents(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
 	dateStart := r.URL.Query().Get("start")
 	dateEnd := r.URL.Query().Get("end")
 	events := []model.Event{}
+	selectedColumns := db.Select("id, title, date_start, date_end")
 	switch {
 	case dateStart != "" && dateEnd != "":
-		db.Where("date_start > ? AND date_end < ?", dateStart, dateEnd).Find(&events)
+		selectedColumns.Where("date_start > ? AND date_end < ?", dateStart, dateEnd).Find(&events)
 	case dateStart != "" && dateEnd == "":
-		db.Where("date_start > ?", dateStart).Find(&events)
+		selectedColumns.Where("date_start > ?", dateStart).Find(&events)
 	case dateStart == "" && dateEnd != "":
-		db.Where("date_end < ?", dateEnd).Find(&events)
+		selectedColumns.Where("date_end < ?", dateEnd).Find(&events)
 	default:
-		db.Find(&events)
+		selectedColumns.Find(&events)
 	}
 	w.WriteJson(&events)
 }
