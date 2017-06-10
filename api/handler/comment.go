@@ -57,7 +57,7 @@ func GetComment(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
 		rest.NotFound(w, r)
 		return
 	}
-	w.WriteJson(&event)
+	w.WriteJson(&comment)
 }
 
 func UpdateComment(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
