@@ -30,14 +30,14 @@ type DatetimeSerializer struct {
 }
 
 type EventSerialzer struct {
-	Title        string `json:"title"`
-	Description  string `json:"description"`
-	Place        PlaceSerializer `json:"place"`
-	Datetime     DatetimeSerializer `json:"datetime"`
-	Category     CategorySerialzer `json:"category"`
-	Owner        OwnerSerializer `json:"owner"`
-	CreatedAt    *time.Time `json:"created_at"`
-	UpdatedAt    *time.Time `json:"updated_at"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	Place       PlaceSerializer `json:"place"`
+	Datetime    DatetimeSerializer `json:"datetime"`
+	Category    CategorySerialzer `json:"category"`
+	Owner       OwnerSerializer `json:"owner"`
+	CreatedAt   *time.Time `json:"created_at"`
+	UpdatedAt   *time.Time `json:"updated_at"`
 }
 
 func SerializeEvent(db *gorm.DB, event *model.Event) *EventSerialzer {
@@ -67,8 +67,8 @@ func SerializeEvent(db *gorm.DB, event *model.Event) *EventSerialzer {
 			Name:      owner.Name,
 			AvatarURL: owner.AvatarURL,
 		},
-		CreatedAt:    event.CreatedAt,
-		UpdatedAt:    event.UpdatedAt,
+		CreatedAt: event.CreatedAt,
+		UpdatedAt: event.UpdatedAt,
 	}
 	return &eventSerialzer
 }
