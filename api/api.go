@@ -44,7 +44,7 @@ func InitWebAPI() *rest.Api {
 	})
 	webAPI.Use(&rest.IfMiddleware{
 		Condition: func(request *rest.Request) bool {
-			if request.URL.Path != "/auth" || request.URL.Path != "health-check" {
+			if request.URL.Path == "/auth" || request.URL.Path == "/health-check" {
 				return false
 			}
 			return true
