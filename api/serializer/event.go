@@ -3,7 +3,7 @@ package serializer
 import (
 	"time"
 
-	"github.com/jinzhu/gorm"
+	db "github.com/mingrammer/meetup-api/api/database"
 	"github.com/mingrammer/meetup-api/api/model"
 )
 
@@ -41,11 +41,11 @@ type EventSerialzer struct {
 	UpdatedAt   *time.Time `json:"updated_at"`
 }
 
-func SerializeEvent(db *gorm.DB, event *model.Event) *EventSerialzer {
+func SerializeEvent(event *model.Event) *EventSerialzer {
 	owner := model.User{}
-	db.Find(&owner, event.OwnerID)
+	db.DBConn.Find(&owner, event.OwnerID)
 	category := model.Category{}
-	db.Find(&category, event.CategoryID)
+	db.DBConn.Find(&category, event.CategoryID)
 	eventSerialzer := EventSerialzer{
 		ID:          event.ID,
 		Title:       event.Title,

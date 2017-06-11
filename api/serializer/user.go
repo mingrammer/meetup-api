@@ -1,7 +1,7 @@
 package serializer
 
 import (
-	"github.com/jinzhu/gorm"
+	db "github.com/mingrammer/meetup-api/api/database"
 	"github.com/mingrammer/meetup-api/api/model"
 )
 
@@ -11,9 +11,9 @@ type ParticipantSerialzer struct {
 	AvatarURL string `json:"avatar"`
 }
 
-func SerializeParticipant(db *gorm.DB, participant *model.User) *ParticipantSerialzer {
+func SerializeParticipant(participant *model.User) *ParticipantSerialzer {
 	owner := model.User{}
-	db.Find(&owner, participant.ID)
+	db.DBConn.Find(&owner, participant.ID)
 	participantSerialzer := ParticipantSerialzer{
 		ID:        participant.ID,
 		Name:      participant.Name,

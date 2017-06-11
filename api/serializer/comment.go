@@ -3,7 +3,7 @@ package serializer
 import (
 	"time"
 
-	"github.com/jinzhu/gorm"
+	db "github.com/mingrammer/meetup-api/api/database"
 	"github.com/mingrammer/meetup-api/api/model"
 )
 
@@ -22,9 +22,9 @@ type CommentSerialzer struct {
 	UpdatedAt *time.Time `json:"updated_at"`
 }
 
-func SerializeComment(db *gorm.DB, comment *model.Comment) *CommentSerialzer {
+func SerializeComment(comment *model.Comment) *CommentSerialzer {
 	owner := model.User{}
-	db.Find(&owner, comment.WriterID)
+	db.DBConn.Find(&owner, comment.WriterID)
 	commentSerialzer := CommentSerialzer{
 		ID:      comment.ID,
 		Content: comment.Content,

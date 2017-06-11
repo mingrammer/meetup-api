@@ -1,35 +1,36 @@
-package handler
+package web
 
 import (
 	"net/http"
 
 	"github.com/ant0ine/go-json-rest/rest"
-	"github.com/jinzhu/gorm"
+	db "github.com/mingrammer/meetup-api/api/database"
+
 	"github.com/mingrammer/meetup-api/api/model"
 	"github.com/mingrammer/meetup-api/api/serializer"
 )
 
-func GetAllComments(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
-	eventId := r.PathParam("eid")
-	event := GetEventOr404(db, eventId)
+func GetAllComments(w rest.ResponseWriter, r *rest.Request) {
+	eventID := r.PathParam("eid")
+	event := GetEventOr404(eventID)
 	if event == nil {
 		rest.NotFound(w, r)
 		return
 	}
 	comments := []model.Comment{}
-	db.Model(&event).Related(&comments)
+	db.DBConn.Model(&event).Related(&comments)
 	serializedComments := []serializer.CommentSerialzer{}
 	for _, comment := range comments {
-		serializedComments = append(serializedComments, *serializer.SerializeComment(db, &comment))
+		serializedComments = append(serializedComments, *serializer.SerializeComment(&comment))
 	}
 	w.WriteJson(&serializedComments)
 }
 
-func CreateComment(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
+func CreateComment(w rest.ResponseWriter, r *rest.Request) {
 	userToken := r.Env["VALID_USER_TOKEN"]
 	tokenString := userToken.(string)
-	eventId := r.PathParam("eid")
-	event := GetEventOr404(db, eventId)
+	eventID := r.PathParam("eid")
+	event := GetEventOr404(eventID)
 	if event == nil {
 		rest.NotFound(w, r)
 		return
@@ -39,50 +40,50 @@ func CreateComment(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
 		rest.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	user := GetUserOr404(db, tokenString)
+	user := GetUserOr404(tokenString)
 	comment.EventID = event.ID
 	comment.WriterID = user.ID
 	comment.WriterName = user.Name
-	if err := db.Save(&comment).Error; err != nil {
+	if err := db.DBConn.Save(&comment).Error; err != nil {
 		rest.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.WriteJson(&comment)
 }
 
-func GetComment(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
-	eventId := r.PathParam("eid")
-	event := GetEventOr404(db, eventId)
+func GetComment(w rest.ResponseWriter, r *rest.Request) {
+	eventID := r.PathParam("eid")
+	event := GetEventOr404(eventID)
 	if event == nil {
 		rest.NotFound(w, r)
 		return
 	}
 	id := r.PathParam("cid")
-	comment := GetCommentOr404(db, id)
+	comment := GetCommentOr404(id)
 	if comment == nil {
 		rest.NotFound(w, r)
 		return
 	}
-	serializedComment := serializer.SerializeComment(db, comment)
+	serializedComment := serializer.SerializeComment(comment)
 	w.WriteJson(&serializedComment)
 }
 
-func UpdateComment(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
+func UpdateComment(w rest.ResponseWriter, r *rest.Request) {
 	userToken := r.Env["VALID_USER_TOKEN"]
 	tokenString := userToken.(string)
-	eventId := r.PathParam("eid")
-	event := GetEventOr404(db, eventId)
+	eventID := r.PathParam("eid")
+	event := GetEventOr404(eventID)
 	if event == nil {
 		rest.NotFound(w, r)
 		return
 	}
 	id := r.PathParam("cid")
-	comment := GetCommentOr404(db, id)
+	comment := GetCommentOr404(id)
 	if comment == nil {
 		rest.NotFound(w, r)
 		return
 	}
-	user := GetUserOr404(db, tokenString)
+	user := GetUserOr404(tokenString)
 	if comment.WriterID != user.ID {
 		rest.Error(w, "This user is not writer of this comment", http.StatusForbidden)
 		return
@@ -91,34 +92,34 @@ func UpdateComment(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
 		rest.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	if err := db.Save(&comment).Error; err != nil {
+	if err := db.DBConn.Save(&comment).Error; err != nil {
 		rest.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.WriteJson(&comment)
 }
 
-func DeleteComment(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
+func DeleteComment(w rest.ResponseWriter, r *rest.Request) {
 	userToken := r.Env["VALID_USER_TOKEN"]
 	tokenString := userToken.(string)
-	eventId := r.PathParam("eid")
-	event := GetEventOr404(db, eventId)
+	eventID := r.PathParam("eid")
+	event := GetEventOr404(eventID)
 	if event == nil {
 		rest.NotFound(w, r)
 		return
 	}
 	id := r.PathParam("cid")
-	comment := GetCommentOr404(db, id)
+	comment := GetCommentOr404(id)
 	if comment == nil {
 		rest.NotFound(w, r)
 		return
 	}
-	user := GetUserOr404(db, tokenString)
+	user := GetUserOr404(tokenString)
 	if comment.WriterID != user.ID {
 		rest.Error(w, "This user is not writer of this comment", http.StatusForbidden)
 		return
 	}
-	if err := db.Delete(&comment).Error; err != nil {
+	if err := db.DBConn.Delete(&comment).Error; err != nil {
 		rest.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -126,9 +127,9 @@ func DeleteComment(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
 }
 
 // GetCommentOr404 gets a comment instance if exists, or nil otherwise
-func GetCommentOr404(db *gorm.DB, id string) *model.Comment {
+func GetCommentOr404(id string) *model.Comment {
 	comment := model.Comment{}
-	if err := db.First(&comment, id).Error; err != nil {
+	if err := db.DBConn.First(&comment, id).Error; err != nil {
 		return nil
 	}
 	return &comment

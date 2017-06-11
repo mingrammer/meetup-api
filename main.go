@@ -10,8 +10,15 @@ import (
 )
 
 func main() {
-	config := config.GetConfig()
-	api := api.Initialize(config)
-	fmt.Printf("The meetup server is running on :%d\n", config.Port)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", config.Port), api.MakeHandler()))
+	stop := make(chan bool)
+
+	api.InitDB()
+	webAPI := api.InitWebAPI()
+
+	go func() {
+		fmt.Printf("The meetup handler_web server is running on :%d\n", config.WebAPIConfig.Port)
+		log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", config.WebAPIConfig.Port), webAPI.MakeHandler()))
+	}()
+
+	<-stop
 }

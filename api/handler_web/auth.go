@@ -1,4 +1,4 @@
-package handler
+package web
 
 import (
 	"encoding/json"
@@ -7,16 +7,14 @@ import (
 	"net/http"
 
 	"github.com/ant0ine/go-json-rest/rest"
-	"github.com/jinzhu/gorm"
+	db "github.com/mingrammer/meetup-api/api/database"
 	"github.com/mingrammer/meetup-api/api/model"
 	"github.com/mingrammer/meetup-api/api/oauth"
 	"github.com/mingrammer/meetup-api/config"
 	"github.com/nlopes/slack"
 )
 
-func Authorize(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
-	config := config.GetConfig()
-
+func Authorize(w rest.ResponseWriter, r *rest.Request) {
 	code := r.URL.Query().Get("code")
 	redirectURI := r.URL.Query().Get("redirect_uri")
 	if code == "" {
@@ -25,9 +23,9 @@ func Authorize(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
 	}
 	slackTokenURL := fmt.Sprintf(
 		"%s?client_id=%s&client_secret=%s&code=%s&redirect_uri=%s",
-		config.SlackApp.TokenURL,
-		config.SlackApp.ClientID,
-		config.SlackApp.ClientSecret,
+		config.WebAPIConfig.SlackApp.TokenURL,
+		config.WebAPIConfig.SlackApp.ClientID,
+		config.WebAPIConfig.SlackApp.ClientSecret,
 		code,
 		redirectURI,
 	)
@@ -48,7 +46,7 @@ func Authorize(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
 		rest.Error(w, "There are invalid info for getting a token", http.StatusNonAuthoritativeInfo)
 		return
 	}
-	user := GetUserOr404(db, token)
+	user := GetUserOr404(token)
 	if user == nil {
 		userID, username, avatarURL := GetSlackUserProfileInfo(token)
 		user = &model.User{
@@ -57,7 +55,7 @@ func Authorize(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
 			Name:        username,
 			AvatarURL:   avatarURL,
 		}
-		db.Create(user)
+		db.DBConn.Create(user)
 	}
 	w.WriteJson(user)
 }
@@ -73,9 +71,9 @@ func GetSlackUserProfileInfo(token string) (string, string, string) {
 }
 
 // GetUserOr404 gets a user instance if exists, or nil otherwise
-func GetUserOr404(db *gorm.DB, token string) *model.User {
+func GetUserOr404(token string) *model.User {
 	user := model.User{}
-	if err := db.Where(&model.User{Token: token}).First(&user).Error; err != nil {
+	if err := db.DBConn.Where(&model.User{Token: token}).First(&user).Error; err != nil {
 		return nil
 	}
 	return &user

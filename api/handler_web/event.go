@@ -1,20 +1,20 @@
-package handler
+package web
 
 import (
 	"net/http"
 	"strconv"
 
 	"github.com/ant0ine/go-json-rest/rest"
-	"github.com/jinzhu/gorm"
+	db "github.com/mingrammer/meetup-api/api/database"
 	"github.com/mingrammer/meetup-api/api/model"
 	"github.com/mingrammer/meetup-api/api/serializer"
 )
 
-func GetAllEvents(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
+func GetAllEvents(w rest.ResponseWriter, r *rest.Request) {
 	dateStart := r.URL.Query().Get("start")
 	dateEnd := r.URL.Query().Get("end")
 	events := []model.Event{}
-	selectedColumns := db.Select("id, title, date_start, date_end")
+	selectedColumns := db.DBConn.Select("id, title, date_start, date_end")
 	switch {
 	case dateStart != "" && dateEnd != "":
 		selectedColumns.Where("date_start > ? AND date_end < ?", dateStart, dateEnd).Find(&events)
@@ -28,7 +28,7 @@ func GetAllEvents(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
 	w.WriteJson(&events)
 }
 
-func CreateEvent(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
+func CreateEvent(w rest.ResponseWriter, r *rest.Request) {
 	userToken := r.Env["VALID_USER_TOKEN"]
 	tokenString := userToken.(string)
 	event := model.Event{}
@@ -36,41 +36,41 @@ func CreateEvent(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
 		rest.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	category := GetCategoryOr404(db, strconv.FormatUint(uint64(event.CategoryID), 10))
+	category := GetCategoryOr404(strconv.FormatUint(uint64(event.CategoryID), 10))
 	if category != nil {
 		event.CategoryTitle = category.Title
 	}
-	user := GetUserOr404(db, tokenString)
+	user := GetUserOr404(tokenString)
 	event.OwnerID = user.ID
 	event.OwnerName = user.Name
-	if err := db.Save(&event).Error; err != nil {
+	if err := db.DBConn.Save(&event).Error; err != nil {
 		rest.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.WriteJson(&event)
 }
 
-func GetEvent(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
+func GetEvent(w rest.ResponseWriter, r *rest.Request) {
 	id := r.PathParam("eid")
-	event := GetEventOr404(db, id)
+	event := GetEventOr404(id)
 	if event == nil {
 		rest.NotFound(w, r)
 		return
 	}
-	serializedEvent := serializer.SerializeEvent(db, event)
+	serializedEvent := serializer.SerializeEvent(event)
 	w.WriteJson(&serializedEvent)
 }
 
-func UpdateEvent(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
+func UpdateEvent(w rest.ResponseWriter, r *rest.Request) {
 	userToken := r.Env["VALID_USER_TOKEN"]
 	tokenString := userToken.(string)
 	id := r.PathParam("eid")
-	event := GetEventOr404(db, id)
+	event := GetEventOr404(id)
 	if event == nil {
 		rest.NotFound(w, r)
 		return
 	}
-	user := GetUserOr404(db, tokenString)
+	user := GetUserOr404(tokenString)
 	if event.OwnerID != user.ID {
 		rest.Error(w, "This user is not owner of this event", http.StatusForbidden)
 		return
@@ -79,78 +79,78 @@ func UpdateEvent(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
 		rest.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	if err := db.Save(&event).Error; err != nil {
+	if err := db.DBConn.Save(&event).Error; err != nil {
 		rest.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.WriteJson(&event)
 }
 
-func DeleteEvent(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
+func DeleteEvent(w rest.ResponseWriter, r *rest.Request) {
 	userToken := r.Env["VALID_USER_TOKEN"]
 	tokenString := userToken.(string)
 	id := r.PathParam("eid")
-	event := GetEventOr404(db, id)
+	event := GetEventOr404(id)
 	if event == nil {
 		rest.NotFound(w, r)
 		return
 	}
-	user := GetUserOr404(db, tokenString)
+	user := GetUserOr404(tokenString)
 	if event.OwnerID != user.ID {
 		rest.Error(w, "This user is not owner of this event", http.StatusForbidden)
 		return
 	}
-	if err := db.Delete(&event).Error; err != nil {
+	if err := db.DBConn.Delete(&event).Error; err != nil {
 		rest.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
 }
 
-func GetAllParticipants(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
+func GetAllParticipants(w rest.ResponseWriter, r *rest.Request) {
 	eventId := r.PathParam("eid")
-	event := GetEventOr404(db, eventId)
+	event := GetEventOr404(eventId)
 	if event == nil {
 		rest.NotFound(w, r)
 		return
 	}
 	users := []model.User{}
-	db.Model(&event).Association("Participants").Find(&users)
+	db.DBConn.Model(&event).Association("Participants").Find(&users)
 	serializedParticipants := []serializer.ParticipantSerialzer{}
 	for _, user := range users {
-		serializedParticipants = append(serializedParticipants, *serializer.SerializeParticipant(db, &user))
+		serializedParticipants = append(serializedParticipants, *serializer.SerializeParticipant(&user))
 	}
 	w.WriteJson(&serializedParticipants)
 }
 
-func JoinEvent(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
+func JoinEvent(w rest.ResponseWriter, r *rest.Request) {
 	userToken := r.Env["VALID_USER_TOKEN"]
 	tokenString := userToken.(string)
 	eventId := r.PathParam("eid")
-	event := GetEventOr404(db, eventId)
+	event := GetEventOr404(eventId)
 	if event == nil {
 		rest.NotFound(w, r)
 		return
 	}
-	user := GetUserOr404(db, tokenString)
-	if err := db.Model(&event).Association("Participants").Append(user).Error; err != nil {
+	user := GetUserOr404(tokenString)
+	if err := db.DBConn.Model(&event).Association("Participants").Append(user).Error; err != nil {
 		rest.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
 }
 
-func DisjoinEvent(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
+func DisjoinEvent(w rest.ResponseWriter, r *rest.Request) {
 	userToken := r.Env["VALID_USER_TOKEN"]
 	tokenString := userToken.(string)
 	eventId := r.PathParam("eid")
-	event := GetEventOr404(db, eventId)
+	event := GetEventOr404(eventId)
 	if event == nil {
 		rest.NotFound(w, r)
 		return
 	}
-	user := GetUserOr404(db, tokenString)
-	if err := db.Model(&event).Association("Participants").Delete(user).Error; err != nil {
+	user := GetUserOr404(tokenString)
+	if err := db.DBConn.Model(&event).Association("Participants").Delete(user).Error; err != nil {
 		rest.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -158,9 +158,9 @@ func DisjoinEvent(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
 }
 
 // GetEventOr404 gets a event instance if exists, or nil otherwise
-func GetEventOr404(db *gorm.DB, id string) *model.Event {
+func GetEventOr404(id string) *model.Event {
 	event := model.Event{}
-	if err := db.First(&event, id).Error; err != nil {
+	if err := db.DBConn.First(&event, id).Error; err != nil {
 		return nil
 	}
 	return &event

@@ -1,44 +1,28 @@
 package api
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/ant0ine/go-json-rest/rest"
-	"github.com/jinzhu/gorm"
-	"github.com/mingrammer/meetup-api/api/handler"
+	db "github.com/mingrammer/meetup-api/api/database"
+	"github.com/mingrammer/meetup-api/api/handler_web"
 	"github.com/mingrammer/meetup-api/api/middleware"
-	"github.com/mingrammer/meetup-api/api/model"
-	"github.com/mingrammer/meetup-api/config"
 )
 
-type MeetupApp struct {
-	Api    *rest.Api
-	DB     *gorm.DB
-	Config *config.Config
+type MeetupWebApp struct {
+	API *rest.Api
 }
 
-func Initialize(config *config.Config) *rest.Api {
-	meetupApp := &MeetupApp{}
-	meetupApp.Config = config
-	meetupApp.InitDB()
-	meetupApp.InitSchema()
-	meetupApp.SetInitialData()
+func InitDB() {
+	db.InitDB()
+	db.InitSchema()
+	db.InsertInitialData()
+}
 
-	tokenMiddleware := &middleware.TokenAuthMiddleware{
-		Realm: "meetup",
-		Authenticator: func(token string) bool {
-			user := handler.GetUserOr404(meetupApp.DB, token)
-			if user != nil {
-				return true
-			}
-			return false
-		},
-	}
-
-	meetupApp.Api = rest.NewApi()
-	meetupApp.Api.Use(rest.DefaultDevStack...)
-	meetupApp.Api.Use(&rest.CorsMiddleware{
+func InitWebAPI() *rest.Api {
+	webAPI := rest.NewApi()
+	webAPI.Use(rest.DefaultDevStack...)
+	webAPI.Use(&rest.CorsMiddleware{
 		RejectNonCorsRequests: false,
 		OriginValidator: func(origin string, request *rest.Request) bool {
 			return true
@@ -58,136 +42,42 @@ func Initialize(config *config.Config) *rest.Api {
 		AccessControlAllowCredentials: true,
 		AccessControlMaxAge:           3600,
 	})
-	meetupApp.Api.Use(&rest.IfMiddleware{
+	webAPI.Use(&rest.IfMiddleware{
 		Condition: func(request *rest.Request) bool {
 			return request.URL.Path != "/auth"
 		},
-		IfTrue: tokenMiddleware,
+		IfTrue: &middleware.TokenAuthMiddleware{
+			Realm: "meetup",
+			Authenticator: func(token string) bool {
+				user := web.GetUserOr404(token)
+				if user != nil {
+					return true
+				}
+				return false
+			},
+		},
 	})
 	router, err := rest.MakeRouter(
-		rest.Get("/auth", meetupApp.Authorize),
-		rest.Get("/events", meetupApp.GetAllEvents),
-		rest.Post("/events", meetupApp.CreateEvent),
-		rest.Get("/events/:eid", meetupApp.GetEvent),
-		rest.Put("/events/:eid", meetupApp.UpdateEvent),
-		rest.Delete("/events/:eid", meetupApp.DeleteEvent),
-		rest.Get("/events/:eid/participants", meetupApp.GetAllParticipants),
-		rest.Put("/events/:eid/join", meetupApp.JoinEvent),
-		rest.Delete("/events/:eid/join", meetupApp.DisjoinEvent),
-		rest.Get("/events/:eid/comments", meetupApp.GetAllComments),
-		rest.Post("/events/:eid/comments", meetupApp.CreateComment),
-		rest.Get("/events/:eid/comments/:cid", meetupApp.GetComment),
-		rest.Put("/events/:eid/comments/:cid", meetupApp.UpdateComment),
-		rest.Delete("/events/:eid/comments/:cid", meetupApp.DeleteComment),
-		rest.Get("/categories", meetupApp.GetAllCategories),
-		rest.Get("/categories/:tid", meetupApp.GetCategory),
+		rest.Get("/auth", web.Authorize),
+		rest.Get("/events", web.GetAllEvents),
+		rest.Post("/events", web.CreateEvent),
+		rest.Get("/events/:eid", web.GetEvent),
+		rest.Put("/events/:eid", web.UpdateEvent),
+		rest.Delete("/events/:eid", web.DeleteEvent),
+		rest.Get("/events/:eid/participants", web.GetAllParticipants),
+		rest.Put("/events/:eid/join", web.JoinEvent),
+		rest.Delete("/events/:eid/join", web.DisjoinEvent),
+		rest.Get("/events/:eid/comments", web.GetAllComments),
+		rest.Post("/events/:eid/comments", web.CreateComment),
+		rest.Get("/events/:eid/comments/:cid", web.GetComment),
+		rest.Put("/events/:eid/comments/:cid", web.UpdateComment),
+		rest.Delete("/events/:eid/comments/:cid", web.DeleteComment),
+		rest.Get("/categories", web.GetAllCategories),
+		rest.Get("/categories/:tid", web.GetCategory),
 	)
 	if err != nil {
 		log.Fatal(err)
 	}
-	meetupApp.Api.SetApp(router)
-	return meetupApp.Api
-}
-
-func (ma *MeetupApp) InitDB() {
-	dbURI := fmt.Sprintf("%s:%s@/%s?charset=%s&parseTime=True",
-		ma.Config.DB.Username,
-		ma.Config.DB.Password,
-		ma.Config.DB.Name,
-		ma.Config.DB.Charset)
-	db, err := gorm.Open(ma.Config.DB.Dialect, dbURI)
-	if err != nil {
-		log.Fatal("Could not connect database")
-	}
-	ma.DB = db
-}
-
-func (ma *MeetupApp) InitSchema() {
-	ma.DB.AutoMigrate(&model.User{})
-	ma.DB.AutoMigrate(&model.Category{})
-	ma.DB.AutoMigrate(&model.Event{})
-	ma.DB.Model(&model.Event{}).AddForeignKey("owner_id", "users(id)", "CASCADE", "CASCADE")
-	ma.DB.Model(&model.Event{}).AddForeignKey("category_id", "categories(id)", "CASCADE", "CASCADE")
-	ma.DB.AutoMigrate(&model.Comment{})
-	ma.DB.Model(&model.Comment{}).AddForeignKey("writer_id", "users(id)", "CASCADE", "CASCADE")
-	ma.DB.Model(&model.Comment{}).AddForeignKey("event_id", "events(id)", "CASCADE", "CASCADE")
-}
-
-func (ma *MeetupApp) SetInitialData() {
-	categories := []model.Category{
-		{Title: "drink"},
-		{Title: "coffee"},
-		{Title: "coding"},
-		{Title: "talking"},
-		{Title: "meal"},
-	}
-	for _, category := range categories {
-		if err := ma.DB.First(&model.Category{}, model.Category{Title: category.Title}).Error; err != nil {
-			ma.DB.Create(&category)
-		}
-	}
-}
-
-func (ma *MeetupApp) Authorize(w rest.ResponseWriter, r *rest.Request) {
-	handler.Authorize(ma.DB, w, r)
-}
-
-func (ma *MeetupApp) GetAllEvents(w rest.ResponseWriter, r *rest.Request) {
-	handler.GetAllEvents(ma.DB, w, r)
-}
-
-func (ma *MeetupApp) CreateEvent(w rest.ResponseWriter, r *rest.Request) {
-	handler.CreateEvent(ma.DB, w, r)
-}
-
-func (ma *MeetupApp) GetEvent(w rest.ResponseWriter, r *rest.Request) {
-	handler.GetEvent(ma.DB, w, r)
-}
-
-func (ma *MeetupApp) UpdateEvent(w rest.ResponseWriter, r *rest.Request) {
-	handler.UpdateEvent(ma.DB, w, r)
-}
-
-func (ma *MeetupApp) DeleteEvent(w rest.ResponseWriter, r *rest.Request) {
-	handler.DeleteEvent(ma.DB, w, r)
-}
-
-func (ma *MeetupApp) GetAllParticipants(w rest.ResponseWriter, r *rest.Request) {
-	handler.GetAllParticipants(ma.DB, w, r)
-}
-
-func (ma *MeetupApp) JoinEvent(w rest.ResponseWriter, r *rest.Request) {
-	handler.JoinEvent(ma.DB, w, r)
-}
-
-func (ma *MeetupApp) DisjoinEvent(w rest.ResponseWriter, r *rest.Request) {
-	handler.DisjoinEvent(ma.DB, w, r)
-}
-
-func (ma *MeetupApp) GetAllComments(w rest.ResponseWriter, r *rest.Request) {
-	handler.GetAllComments(ma.DB, w, r)
-}
-
-func (ma *MeetupApp) CreateComment(w rest.ResponseWriter, r *rest.Request) {
-	handler.CreateComment(ma.DB, w, r)
-}
-
-func (ma *MeetupApp) GetComment(w rest.ResponseWriter, r *rest.Request) {
-	handler.GetComment(ma.DB, w, r)
-}
-
-func (ma *MeetupApp) UpdateComment(w rest.ResponseWriter, r *rest.Request) {
-	handler.UpdateComment(ma.DB, w, r)
-}
-
-func (ma *MeetupApp) DeleteComment(w rest.ResponseWriter, r *rest.Request) {
-	handler.DeleteComment(ma.DB, w, r)
-}
-
-func (ma *MeetupApp) GetAllCategories(w rest.ResponseWriter, r *rest.Request) {
-	handler.GetAllCategories(ma.DB, w, r)
-}
-
-func (ma *MeetupApp) GetCategory(w rest.ResponseWriter, r *rest.Request) {
-	handler.GetCategory(ma.DB, w, r)
+	webAPI.SetApp(router)
+	return webAPI
 }

@@ -1,20 +1,20 @@
-package handler
+package web
 
 import (
 	"github.com/ant0ine/go-json-rest/rest"
-	"github.com/jinzhu/gorm"
+	db "github.com/mingrammer/meetup-api/api/database"
 	"github.com/mingrammer/meetup-api/api/model"
 )
 
-func GetAllCategories(db *gorm.DB, w rest.ResponseWriter, _ *rest.Request) {
+func GetAllCategories(w rest.ResponseWriter, _ *rest.Request) {
 	categories := []model.Category{}
-	db.Find(&categories)
+	db.DBConn.Find(&categories)
 	w.WriteJson(&categories)
 }
 
-func GetCategory(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
+func GetCategory(w rest.ResponseWriter, r *rest.Request) {
 	categoryID := r.PathParam("tid")
-	category := GetCategoryOr404(db, categoryID)
+	category := GetCategoryOr404(categoryID)
 	if category == nil {
 		rest.NotFound(w, r)
 		return
@@ -23,9 +23,9 @@ func GetCategory(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
 }
 
 // GetCategoryOr404 gets a category instance if exists, or nil otherwise
-func GetCategoryOr404(db *gorm.DB, id string) *model.Category {
+func GetCategoryOr404(id string) *model.Category {
 	category := model.Category{}
-	if err := db.First(&category, id).Error; err != nil {
+	if err := db.DBConn.First(&category, id).Error; err != nil {
 		return nil
 	}
 	return &category

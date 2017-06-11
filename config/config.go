@@ -1,50 +1,58 @@
 package config
 
 import (
-	"os"
+	"log"
+
+	"github.com/kelseyhightower/envconfig"
 )
 
-type Config struct {
-	Secret   string
-	Host     string
-	Port     int
-	DB       *DBConfig
-	SlackApp *SlackAppConfig
+type WebAPIEnv struct {
+	Secret   string `envconfig:"API_SECRET_VALUE"`
+	Port     int `default:"8080"`
+	SlackApp *SlackAppEnv
 }
 
-type DBConfig struct {
-	Dialect  string
-	Username string
-	Password string
-	Name     string
-	Charset  string
+type BotAPIEnv struct {
+	Secret   string `envconfig:"API_SECRET_VALUE"`
+	Port     int `default:"8081"`
+	SlackBot *SlackBotEnv
 }
 
-type SlackAppConfig struct {
-	ClientID     string
-	ClientSecret string
-	TokenURL     string
+type DBEnv struct {
+	Dialect  string `default:"mysql"`
+	Username string `envconfig:"DB_USERNAME"`
+	Password string `envconfig:"DB_PASSWORD"`
+	Name     string `default:"meetup"`
+	Charset  string `default:"utf8"`
 }
 
-func GetConfig() *Config {
-	DefaultHost := "localhost"
-	DefaultPort := 8080
+type SlackBotEnv struct {
+	BotToken          string `envconfig:"SLACK_BOT_TOKEN"`
+	VerificationToken string `envconfig:"SLACK_VERIFICATION_TOKEN"`
+	BotID             string `envconfig:"SLACK_BOT_ID" default="meetup"`
+}
 
-	return &Config{
-		Secret: os.Getenv("API_SECRET_VALUE"),
-		Host:   DefaultHost,
-		Port:   DefaultPort,
-		DB: &DBConfig{
-			Dialect:  "mysql",
-			Username: os.Getenv("DB_USERNAME"),
-			Password: os.Getenv("DB_PASSWORD"),
-			Name:     "meetup",
-			Charset:  "utf8",
-		},
-		SlackApp: &SlackAppConfig{
-			ClientID:     os.Getenv("SLACK_CLIENT_ID"),
-			ClientSecret: os.Getenv("SLACK_CLIENT_SECRET"),
-			TokenURL:     "https://slack.com/api/oauth.access",
-		},
+type SlackAppEnv struct {
+	ClientID     string `envconfig:"SLACK_CLIENT_ID"`
+	ClientSecret string `envconfig:"SLACK_CLIENT_SECRET"`
+	TokenURL     string `default:"https://slack.com/api/oauth.access"`
+}
+
+var DBConfig DBEnv
+var WebAPIConfig WebAPIEnv
+var BotAPIConfig BotAPIEnv
+
+func init() {
+	if err := envconfig.Process("", &DBConfig); err != nil {
+		log.Fatalf("Failed to process env var : %s", err)
+		return
+	}
+	if err := envconfig.Process("", &WebAPIConfig); err != nil {
+		log.Fatalf("Failed to process env var : %s", err)
+		return
+	}
+	if err := envconfig.Process("", &BotAPIConfig); err != nil {
+		log.Fatalf("Failed to process env var : %s", err)
+		return
 	}
 }
