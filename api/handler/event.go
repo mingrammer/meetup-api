@@ -62,10 +62,17 @@ func GetEvent(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
 }
 
 func UpdateEvent(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
+	userToken := r.Env["VALID_USER_TOKEN"]
+	tokenString := userToken.(string)
 	id := r.PathParam("eid")
 	event := GetEventOr404(db, id)
 	if event == nil {
 		rest.NotFound(w, r)
+		return
+	}
+	user := GetUserOr404(db, tokenString)
+	if event.OwnerID != user.ID {
+		rest.Error(w, "This user is not owner of this event", http.StatusForbidden)
 		return
 	}
 	if err := r.DecodeJsonPayload(&event); err != nil {
@@ -80,10 +87,17 @@ func UpdateEvent(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
 }
 
 func DeleteEvent(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
+	userToken := r.Env["VALID_USER_TOKEN"]
+	tokenString := userToken.(string)
 	id := r.PathParam("eid")
 	event := GetEventOr404(db, id)
 	if event == nil {
 		rest.NotFound(w, r)
+		return
+	}
+	user := GetUserOr404(db, tokenString)
+	if event.OwnerID != user.ID {
+		rest.Error(w, "This user is not owner of this event", http.StatusForbidden)
 		return
 	}
 	if err := db.Delete(&event).Error; err != nil {

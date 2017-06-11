@@ -68,6 +68,8 @@ func GetComment(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
 }
 
 func UpdateComment(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
+	userToken := r.Env["VALID_USER_TOKEN"]
+	tokenString := userToken.(string)
 	eventId := r.PathParam("eid")
 	event := GetEventOr404(db, eventId)
 	if event == nil {
@@ -78,6 +80,11 @@ func UpdateComment(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
 	comment := GetCommentOr404(db, id)
 	if comment == nil {
 		rest.NotFound(w, r)
+		return
+	}
+	user := GetUserOr404(db, tokenString)
+	if comment.WriterID != user.ID {
+		rest.Error(w, "This user is not writer of this comment", http.StatusForbidden)
 		return
 	}
 	if err := r.DecodeJsonPayload(&comment); err != nil {
@@ -92,6 +99,8 @@ func UpdateComment(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
 }
 
 func DeleteComment(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
+	userToken := r.Env["VALID_USER_TOKEN"]
+	tokenString := userToken.(string)
 	eventId := r.PathParam("eid")
 	event := GetEventOr404(db, eventId)
 	if event == nil {
@@ -102,6 +111,11 @@ func DeleteComment(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
 	comment := GetCommentOr404(db, id)
 	if comment == nil {
 		rest.NotFound(w, r)
+		return
+	}
+	user := GetUserOr404(db, tokenString)
+	if comment.WriterID != user.ID {
+		rest.Error(w, "This user is not writer of this comment", http.StatusForbidden)
 		return
 	}
 	if err := db.Delete(&comment).Error; err != nil {
