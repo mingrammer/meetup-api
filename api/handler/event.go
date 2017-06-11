@@ -93,6 +93,56 @@ func DeleteEvent(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+func GetAllParticipants(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
+	eventId := r.PathParam("eid")
+	event := GetEventOr404(db, eventId)
+	if event == nil {
+		rest.NotFound(w, r)
+		return
+	}
+	users := []model.User{}
+	db.Model(&event).Association("Participants").Find(&users)
+	serializedParticipants := []serializer.ParticipantSerialzer{}
+	for _, user := range users {
+		serializedParticipants = append(serializedParticipants, *serializer.SerializeParticipant(db, &user))
+	}
+	w.WriteJson(&serializedParticipants)
+}
+
+func JoinEvent(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
+	userToken := r.Env["REMOTE_USER"]
+	tokenString := userToken.(string)
+	eventId := r.PathParam("eid")
+	event := GetEventOr404(db, eventId)
+	if event == nil {
+		rest.NotFound(w, r)
+		return
+	}
+	user := GetUserOr404(db, tokenString)
+	if err := db.Model(&event).Association("Participants").Append(user).Error; err != nil {
+		rest.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func DisjoinEvent(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
+	userToken := r.Env["REMOTE_USER"]
+	tokenString := userToken.(string)
+	eventId := r.PathParam("eid")
+	event := GetEventOr404(db, eventId)
+	if event == nil {
+		rest.NotFound(w, r)
+		return
+	}
+	user := GetUserOr404(db, tokenString)
+	if err := db.Model(&event).Association("Participants").Delete(user).Error; err != nil {
+		rest.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
 // GetEventOr404 gets a event instance if exists, or nil otherwise
 func GetEventOr404(db *gorm.DB, id string) *model.Event {
 	event := model.Event{}

@@ -71,6 +71,9 @@ func Initialize(config *config.Config) *rest.Api {
 		rest.Get("/events/:eid", meetupApp.GetEvent),
 		rest.Put("/events/:eid", meetupApp.UpdateEvent),
 		rest.Delete("/events/:eid", meetupApp.DeleteEvent),
+		rest.Get("/events/:eid/participants", meetupApp.GetAllParticipants),
+		rest.Put("/events/:eid/join", meetupApp.JoinEvent),
+		rest.Delete("/events/:eid/join", meetupApp.DisjoinEvent),
 		rest.Get("/events/:eid/comments", meetupApp.GetAllComments),
 		rest.Post("/events/:eid/comments", meetupApp.CreateComment),
 		rest.Get("/events/:eid/comments/:cid", meetupApp.GetComment),
@@ -147,6 +150,18 @@ func (ma *MeetupApp) UpdateEvent(w rest.ResponseWriter, r *rest.Request) {
 
 func (ma *MeetupApp) DeleteEvent(w rest.ResponseWriter, r *rest.Request) {
 	handler.DeleteEvent(ma.DB, w, r)
+}
+
+func (ma *MeetupApp) GetAllParticipants(w rest.ResponseWriter, r *rest.Request) {
+	handler.GetAllParticipants(ma.DB, w, r)
+}
+
+func (ma *MeetupApp) JoinEvent(w rest.ResponseWriter, r *rest.Request) {
+	handler.JoinEvent(ma.DB, w, r)
+}
+
+func (ma *MeetupApp) DisjoinEvent(w rest.ResponseWriter, r *rest.Request) {
+	handler.DisjoinEvent(ma.DB, w, r)
 }
 
 func (ma *MeetupApp) GetAllComments(w rest.ResponseWriter, r *rest.Request) {
