@@ -44,7 +44,10 @@ func InitWebAPI() *rest.Api {
 	})
 	webAPI.Use(&rest.IfMiddleware{
 		Condition: func(request *rest.Request) bool {
-			return request.URL.Path != "/auth"
+			if request.URL.Path != "/auth" || request.URL.Path != "health-check" {
+				return false
+			}
+			return true
 		},
 		IfTrue: &middleware.TokenAuthMiddleware{
 			Realm: "meetup",
@@ -58,6 +61,7 @@ func InitWebAPI() *rest.Api {
 		},
 	})
 	router, err := rest.MakeRouter(
+		rest.Get("/health-check", web.HealthCheck),
 		rest.Get("/auth", web.Authorize),
 		rest.Get("/events", web.GetAllEvents),
 		rest.Post("/events", web.CreateEvent),
