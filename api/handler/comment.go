@@ -26,7 +26,7 @@ func GetAllComments(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
 }
 
 func CreateComment(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
-	userToken := r.Env["REMOTE_USER"]
+	userToken := r.Env["VALID_USER_TOKEN"]
 	tokenString := userToken.(string)
 	eventId := r.PathParam("eid")
 	event := GetEventOr404(db, eventId)

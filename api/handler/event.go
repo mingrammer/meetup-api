@@ -29,7 +29,7 @@ func GetAllEvents(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
 }
 
 func CreateEvent(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
-	userToken := r.Env["REMOTE_USER"]
+	userToken := r.Env["VALID_USER_TOKEN"]
 	tokenString := userToken.(string)
 	event := model.Event{}
 	if err := r.DecodeJsonPayload(&event); err != nil {
@@ -110,7 +110,7 @@ func GetAllParticipants(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
 }
 
 func JoinEvent(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
-	userToken := r.Env["REMOTE_USER"]
+	userToken := r.Env["VALID_USER_TOKEN"]
 	tokenString := userToken.(string)
 	eventId := r.PathParam("eid")
 	event := GetEventOr404(db, eventId)
@@ -127,7 +127,7 @@ func JoinEvent(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
 }
 
 func DisjoinEvent(db *gorm.DB, w rest.ResponseWriter, r *rest.Request) {
-	userToken := r.Env["REMOTE_USER"]
+	userToken := r.Env["VALID_USER_TOKEN"]
 	tokenString := userToken.(string)
 	eventId := r.PathParam("eid")
 	event := GetEventOr404(db, eventId)

@@ -46,7 +46,7 @@ func (mw *TokenAuthMiddleware) MiddlewareFunc(handler rest.HandlerFunc) rest.Han
 			mw.unauthorized(writer)
 			return
 		}
-		request.Env["REMOTE_USER"] = providedToken
+		request.Env["VALID_USER_TOKEN"] = providedToken
 		handler(writer, request)
 	}
 }
