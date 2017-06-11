@@ -17,3 +17,5 @@
 
 # Gogland
 .idea/*
+
+*.pem
