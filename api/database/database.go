@@ -12,7 +12,7 @@ import (
 var DBConn *gorm.DB
 
 func InitDB() {
-	dbURI := fmt.Sprintf("%s:%s@/%s?charset=%s&parseTime=True",
+	dbURI := fmt.Sprintf("%s:%s@/%s?charset=%s&parseTime=True&loc=Asia%%2FSeoul",
 		config.DBConfig.Username,
 		config.DBConfig.Password,
 		config.DBConfig.Name,

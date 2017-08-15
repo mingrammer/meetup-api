@@ -8,13 +8,13 @@ import (
 
 type WebAPIEnv struct {
 	Secret   string `envconfig:"API_SECRET_VALUE"`
-	Port     int `default:"8080"`
+	Port     int    `default:"8080"`
 	SlackApp *SlackAppEnv
 }
 
 type BotAPIEnv struct {
 	Secret          string `envconfig:"API_SECRET_VALUE"`
-	Port            int `default:"8081"`
+	Port            int    `default:"8081"`
 	GoogleAPIKey    string `envconfig:"GOOGLE_API_KEY"`
 	GoogleMapAPIKey string `envconfig:"GOOGLE_MAP_API_KEY"`
 	WebEndpoint     string `envconfig:"WEB_ENDPOINT"`
@@ -32,7 +32,7 @@ type DBEnv struct {
 type SlackBotEnv struct {
 	BotToken          string `envconfig:"SLACK_BOT_TOKEN"`
 	VerificationToken string `envconfig:"SLACK_VERIFICATION_TOKEN"`
-	BotID             string `envconfig:"SLACK_BOT_ID" default="meetup"`
+	BotID             string `envconfig:"SLACK_BOT_ID"`
 	ChannelID         string `envconfig:"SLACK_BOT_CHANNEL_ID"`
 }
 

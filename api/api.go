@@ -5,8 +5,11 @@ import (
 
 	"github.com/ant0ine/go-json-rest/rest"
 	db "github.com/mingrammer/meetup-api/api/database"
+	"github.com/mingrammer/meetup-api/api/handler_bot"
 	"github.com/mingrammer/meetup-api/api/handler_web"
 	"github.com/mingrammer/meetup-api/api/middleware"
+	"github.com/mingrammer/meetup-api/config"
+	"github.com/nlopes/slack"
 )
 
 type MeetupWebApp struct {
@@ -84,4 +87,27 @@ func InitWebAPI() *rest.Api {
 	}
 	webAPI.SetApp(router)
 	return webAPI
+}
+
+func InitBotAPI() *rest.Api {
+	botAPI := rest.NewApi()
+	botAPI.Use(
+		&rest.AccessLogApacheMiddleware{},
+		&rest.TimerMiddleware{},
+		&rest.RecorderMiddleware{},
+		&rest.PoweredByMiddleware{},
+		&rest.RecoverMiddleware{
+			EnableResponseStackTrace: true,
+		},
+		&rest.JsonIndentMiddleware{},
+	)
+	client := slack.New(config.BotAPIConfig.SlackBot.BotToken)
+	slackListener := &bot.SlackListener{
+		Client:    client,
+		BotID:     config.BotAPIConfig.SlackBot.BotID,
+		ChannelID: config.BotAPIConfig.SlackBot.ChannelID,
+	}
+	go slackListener.ListenAndResponse()
+
+	return botAPI
 }
