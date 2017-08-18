@@ -33,6 +33,9 @@ export SLACK_BOT_ID="XXXXXXXXX"
 export SLACK_BOT_CHANNEL_ID="XXXXXXXXXX"
 ```
 
+You should have SSL certificates to enable HTTPS for your API. It requires `certificate.crt` for certificate file and `private.key` for private key on project root directory.
+If you don't need SSL, use `ListenAndServe` instead, in `main.go`
+
 ## Build & Run
 
 In your `$GOPATH`, run this
