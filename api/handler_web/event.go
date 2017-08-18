@@ -8,7 +8,6 @@ import (
 	db "github.com/mingrammer/meetup-api/api/database"
 	"github.com/mingrammer/meetup-api/api/model"
 	"github.com/mingrammer/meetup-api/api/serializer"
-	"github.com/mingrammer/meetup-api/api/timezone"
 )
 
 func GetAllEvents(w rest.ResponseWriter, r *rest.Request) {
@@ -44,8 +43,6 @@ func CreateEvent(w rest.ResponseWriter, r *rest.Request) {
 	user := GetUserOr404(tokenString)
 	event.OwnerID = user.ID
 	event.OwnerName = user.Name
-	event.DateStart = timezone.ConvertToAsiaSeoul(event.DateStart)
-	event.DateEnd = timezone.ConvertToAsiaSeoul(event.DateEnd)
 	if err := db.DBConn.Save(&event).Error; err != nil {
 		rest.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -83,8 +80,6 @@ func UpdateEvent(w rest.ResponseWriter, r *rest.Request) {
 		rest.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	event.DateStart = timezone.ConvertToAsiaSeoul(event.DateStart)
-	event.DateEnd = timezone.ConvertToAsiaSeoul(event.DateEnd)
 	if err := db.DBConn.Save(&event).Error; err != nil {
 		rest.Error(w, err.Error(), http.StatusInternalServerError)
 		return
