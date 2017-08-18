@@ -2,6 +2,8 @@
 
 # Meetup API
 
+> [Meetup web repository](https://github.com/qkraudghgh/meetup)
+
 This repository is for API server for 9XD meetup management service. With integrated with Slack, users can use the meetup service bi-directionally between slack and web.
 
 ## Features
