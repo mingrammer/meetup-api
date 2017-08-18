@@ -18,4 +18,13 @@
 # Gogland
 .idea/*
 
+# Security keys
 *.pem
+*.crt
+*.key
+
+# Python compiled sources
+__pycache__/
+
+# Binary files
+meetup-api
