@@ -38,11 +38,15 @@ func InitSchema() {
 
 func InsertInitialData() {
 	categories := []model.Category{
-		{Title: "drink"},
-		{Title: "coffee"},
-		{Title: "coding"},
-		{Title: "talking"},
-		{Title: "meal"},
+		{Title: "번개"},
+		{Title: "스터디"},
+		{Title: "코딩"},
+		{Title: "세미나"},
+		{Title: "커피"},
+		{Title: "식사"},
+		{Title: "수다"},
+		{Title: "음주"},
+		{Title: "해커톤"},
 	}
 	for _, category := range categories {
 		if err := DBConn.First(&model.Category{}, model.Category{Title: category.Title}).Error; err != nil {
