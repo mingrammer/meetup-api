@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"encoding/base64"
 	"errors"
 	"log"
 	"net/http"
@@ -57,14 +56,10 @@ func (mw *TokenAuthMiddleware) unauthorized(writer rest.ResponseWriter) {
 	rest.Error(writer, "Not Authorized", http.StatusUnauthorized)
 }
 
-func (mw *TokenAuthMiddleware) decodeBasicAuthHeader(header string) (tokwn string, err error) {
+func (mw *TokenAuthMiddleware) decodeBasicAuthHeader(header string) (token string, err error) {
 	parts := strings.SplitN(header, " ", 2)
 	if !(len(parts) == 2 && parts[0] == "Token") {
 		return "", errors.New("Invalid Authorization header")
-	}
-	_, err = base64.URLEncoding.DecodeString(parts[1])
-	if err != nil {
-		return "", errors.New("Token encoding not valid")
 	}
 	return string(parts[1]), nil
 }
